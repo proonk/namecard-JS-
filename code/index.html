@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>名片自动化拼版系统</title>
-    <link rel="stylesheet" href="/namecard(JS)/code/static/style.css">
+    <!-- 修正静态 CSS 引入路径 -->
+    <link rel="stylesheet" href="static/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -58,7 +59,6 @@
                     <div class="drop-zone" id="dropZoneFront">
                         <input type="file" name="front" id="front" accept="image/*" required class="file-input">
                         
-                        <!-- 默认未上传状态 -->
                         <div class="drop-content" id="contentFront">
                             <div class="icon-circle">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
@@ -67,7 +67,6 @@
                             <span class="file-status" id="frontFileInfo">支持 PNG / JPG</span>
                         </div>
 
-                        <!-- 已上传实时预览图状态 -->
                         <div class="preview-container d-none" id="previewFront">
                             <img src="" alt="正面预览" class="img-preview" id="imgPreviewFront">
                             <span class="preview-filename" id="namePreviewFront"></span>
@@ -85,7 +84,6 @@
                     <div class="drop-zone" id="dropZoneBack">
                         <input type="file" name="back" id="back" accept="image/*" required class="file-input">
                         
-                        <!-- 默认未上传状态 -->
                         <div class="drop-content" id="contentBack">
                             <div class="icon-circle">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
@@ -94,7 +92,6 @@
                             <span class="file-status" id="backFileInfo">支持 PNG / JPG</span>
                         </div>
 
-                        <!-- 已上传实时预览图状态 -->
                         <div class="preview-container d-none" id="previewBack">
                             <img src="" alt="背面预览" class="img-preview" id="imgPreviewBack">
                             <span class="preview-filename" id="namePreviewBack"></span>
@@ -104,7 +101,6 @@
                 </div>
             </div>
 
-            <!-- 提交按钮 -->
             <button type="submit" class="btn-submit" id="submitBtn">
                 <span class="btn-text">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
@@ -118,6 +114,7 @@
         </form>
     </main>
 
-    <script src="/namecard(JS)/code/static/app.js"></script>
+    <!-- 修正静态 JS 引入路径 -->
+    <script src="static/app.js"></script>
 </body>
 </html>

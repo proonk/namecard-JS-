@@ -7,10 +7,10 @@ const path = require('path');
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// 1. 链接静态资源目录 (适配 static/ 文件夹)
+// 1. 静态资源托管：把 /static 映射到 code/static 目录
 app.use('/static', express.static(path.join(__dirname, 'static')));
 
-// 2. 链接网页入口 (适配同级目录下的 index.html)
+// 2. 首页路由：返回 code/index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
 // 单位转换常量 (1mm = 2.83465 pt)
 const MM = 2.83465;
 
-// 辅助画角线与网格函数
+// 辅助绘制印刷裁切线与对位角线
 function drawMarksAndGrid(page, paperW, paperH, cardW, cardH, cols, rows, startXLeft, startXRight, startY, gutterX, gutterY, isA3) {
   const lineDistY = 1.0 * MM;
   const lineDistX = 5.0 * MM;
@@ -37,7 +37,7 @@ function drawMarksAndGrid(page, paperW, paperH, cardW, cardH, cols, rows, startX
 
   const gridTopY = startY + rows * cardH + (rows - 1) * gutterY;
 
-  // 绘制垂直角线
+  // 垂直角线
   for (const xLeft of xPositions) {
     const xRight = xLeft + cardW;
     page.drawLine({ start: { x: xLeft, y: gridTopY + lineDistY }, end: { x: xLeft, y: paperH - paperMargin }, thickness: 0.4, color: rgb(0, 0, 0) });
@@ -49,7 +49,7 @@ function drawMarksAndGrid(page, paperW, paperH, cardW, cardH, cols, rows, startX
   const firstX = xPositions[0];
   const lastX = xPositions[xPositions.length - 1] + cardW;
 
-  // 绘制水平角线
+  // 水平角线
   for (let row = 0; row < rows; row++) {
     const yBottom = startY + row * (cardH + gutterY);
     const yTop = yBottom + cardH;
@@ -76,7 +76,7 @@ function drawMarksAndGrid(page, paperW, paperH, cardW, cardH, cols, rows, startX
   }
 }
 
-// 名片拼版 API
+// 3. 名片拼版 API 处理接口
 app.post('/imposition', upload.fields([{ name: 'front' }, { name: 'back' }]), async (req, res) => {
   try {
     const paperChoice = req.body.paper_choice || '1';
@@ -129,9 +129,16 @@ app.post('/imposition', upload.fields([{ name: 'front' }, { name: 'back' }]), as
 
     const pdfDoc = await PDFDocument.create();
 
+    // 图像兼容嵌入函数
     const embedImage = async (file) => {
-      if (file.mimetype === 'image/png') return await pdfDoc.embedPng(file.buffer);
-      return await pdfDoc.embedJpg(file.buffer);
+      try {
+        if (file.mimetype === 'image/png') {
+          return await pdfDoc.embedPng(file.buffer);
+        }
+        return await pdfDoc.embedJpg(file.buffer);
+      } catch (e) {
+        return await pdfDoc.embedJpg(file.buffer);
+      }
     };
 
     const frontImg = await embedImage(frontFile);
@@ -154,7 +161,7 @@ app.post('/imposition', upload.fields([{ name: 'front' }, { name: 'back' }]), as
       }
     }
 
-    // 第 2 页：背面（镜像翻转）
+    // 第 2 页：背面（镜像翻转排版）
     const page2 = pdfDoc.addPage([paperW, paperH]);
     drawMarksAndGrid(page2, paperW, paperH, cardW, cardH, cols, rows, startXLeft, startXRight, startY, gutterX, gutterY, isA3);
 
@@ -184,13 +191,13 @@ app.post('/imposition', upload.fields([{ name: 'front' }, { name: 'back' }]), as
   }
 });
 
-// 本地开发启动监听 (如在本地通过 node node.js 测试)
+// 本地开发模式启动监听
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on http://localhost:3000`);
   });
 }
 
-// 导出 Serverless Handler 供云端/Netlify 调用
+// 导出 Serverless Handler
 module.exports.handler = serverless(app);
