@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>名片自动化拼版系统</title>
-    <!-- 修正静态 CSS 引入路径 -->
     <link rel="stylesheet" href="static/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入前端 PDF 生成库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="bg-glow"></div>
@@ -18,7 +19,7 @@
             <p>上传名片正面与背面文件，秒级生成带角线出血的矢量 PDF</p>
         </header>
 
-        <form action="/imposition" method="post" enctype="multipart/form-data" id="impositionForm">
+        <form id="impositionForm">
             <!-- 纸张与出血配置 -->
             <div class="config-grid">
                 <div class="form-group">
@@ -101,6 +102,7 @@
                 </div>
             </div>
 
+            <!-- 提交按钮 -->
             <button type="submit" class="btn-submit" id="submitBtn">
                 <span class="btn-text">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
@@ -114,7 +116,7 @@
         </form>
     </main>
 
-    <!-- 修正静态 JS 引入路径 -->
+    <!-- 引用核心 JS 文件 -->
     <script src="static/app.js"></script>
 </body>
 </html>
