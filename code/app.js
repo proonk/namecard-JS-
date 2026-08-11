@@ -122,13 +122,19 @@ async function generateImpositionPDF(paperChoice, useBleed, frontImgData, backIm
         const markLen = 6.0;
 
         const gridTopY = startY;
+        const firstX = xPositions[0];
+        const lastX = xPositions[xPositions.length - 1] + cardW;
 
         // 垂直角线
         for (let i = 0; i < xPositions.length; i++) {
             const xLeft = xPositions[i];
             const xRight = xLeft + cardW;
 
-            doc.line(xLeft, 0 + paperMargin, xLeft, gridTopY - lineDistY);
+            // 修改：只在左上角（i === 0）隐藏原有的顶部垂直线
+            if (i !== 0) {
+                doc.line(xLeft, 0 + paperMargin, xLeft, gridTopY - lineDistY);
+            }
+            
             doc.line(xRight, 0 + paperMargin, xRight, gridTopY - lineDistY);
 
             const gridBottomY = startY + gridH;
@@ -136,15 +142,16 @@ async function generateImpositionPDF(paperChoice, useBleed, frontImgData, backIm
             doc.line(xRight, gridBottomY + lineDistY, xRight, paperH - paperMargin);
         }
 
-        const firstX = xPositions[0];
-        const lastX = xPositions[xPositions.length - 1] + cardW;
-
         // 水平角线
         for (let row = 0; row < rows; row++) {
             const yTop = startY + row * (cardH + gutterY);
             const yBottom = yTop + cardH;
 
-            doc.line(firstX - lineDistX - markLen, yTop, firstX - lineDistX, yTop);
+            // 修改：只在左上角（row === 0）隐藏原有的左侧水平线
+            if (row !== 0) {
+                doc.line(firstX - lineDistX - markLen, yTop, firstX - lineDistX, yTop);
+            }
+            
             doc.line(firstX - lineDistX - markLen, yBottom, firstX - lineDistX, yBottom);
 
             doc.line(lastX + lineDistX, yTop, lastX + lineDistX + markLen, yTop);
@@ -157,6 +164,22 @@ async function generateImpositionPDF(paperChoice, useBleed, frontImgData, backIm
                 doc.line(centerX - armLen, yBottom, centerX + armLen, yBottom);
             }
         }
+
+        // ==========================================
+        // 新增：仅在左上角绘制独立的横线与独立的直角(L型)
+        // ==========================================
+        const cornerX = firstX;
+        const cornerY = gridTopY;
+
+        // 1. 独立的横线 (保持在左侧水平向外，并且不与直角相连)
+        doc.line(cornerX - lineDistX - markLen, cornerY, cornerX - lineDistX - 2, cornerY);
+
+        // 2. 独立的直角符号 (类似于 ┘ 形状，贴近实际裁切点)
+        // 底部小横线
+        doc.line(cornerX - 3, cornerY, cornerX, cornerY);
+        // 右侧小竖线 (从裁切点往上画)
+        doc.line(cornerX, cornerY - 3, cornerX, cornerY);
+        // ==========================================
 
         if (isA3) {
             const centerA3Line = paperW / 2.0;
