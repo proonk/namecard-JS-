@@ -54,6 +54,51 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// 核心功能：仅拉伸/延伸四周边框像素，不缩放、不移动中心文字与排版
+async function extendImageEdges(imgSrc, bleedMm = 1.5, cardWMm = 90, cardHMm = 54) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const origW = img.naturalWidth;
+            const origH = img.naturalHeight;
+
+            // 根据原图像素密度计算 1.5mm 对应的像素大小
+            const pxPerMm = origW / cardWMm;
+            const bleedPxX = Math.round(bleedMm * pxPerMm);
+            const bleedPxY = Math.round(bleedMm * (origH / cardHMm));
+
+            canvas.width = origW + 2 * bleedPxX;
+            canvas.height = origH + 2 * bleedPxY;
+
+            // 1. 中间主体内容：100% 原始尺寸，文字与核心设计绝对不动
+            ctx.drawImage(img, 0, 0, origW, origH, bleedPxX, bleedPxY, origW, origH);
+
+            // 2. 顶部边缘像素向外延伸
+            ctx.drawImage(img, 0, 0, origW, 2, bleedPxX, 0, origW, bleedPxY);
+            // 3. 底部边缘像素向外延伸
+            ctx.drawImage(img, 0, origH - 2, origW, 2, bleedPxX, bleedPxY + origH, origW, bleedPxY);
+            // 4. 左侧边缘像素向外延伸
+            ctx.drawImage(img, 0, 0, 2, origH, 0, bleedPxY, bleedPxX, origH);
+            // 5. 右侧边缘像素向外延伸
+            ctx.drawImage(img, origW - 2, 0, 2, origH, bleedPxX + origW, bleedPxY, bleedPxX, origH);
+
+            // 6. 填补四个角（左上、右上、左下、右下）
+            ctx.drawImage(img, 0, 0, 2, 2, 0, 0, bleedPxX, bleedPxY);
+            ctx.drawImage(img, origW - 2, 0, 2, 2, bleedPxX + origW, 0, bleedPxX, bleedPxY);
+            ctx.drawImage(img, 0, origH - 2, 2, 2, 0, bleedPxY + origH, bleedPxX, bleedPxY);
+            ctx.drawImage(img, origW - 2, origH - 2, 2, 2, bleedPxX + origW, bleedPxY + origH, bleedPxX, bleedPxY);
+
+            resolve(canvas.toDataURL('image/jpeg', 0.98));
+        };
+        img.onerror = reject;
+        img.src = imgSrc;
+    });
+}
+
 // 使用 jsPDF 库在浏览器端计算拼版与角线
 async function generateImpositionPDF(paperChoice, useBleed, frontImgData, backImgData) {
     const { jsPDF } = window.jspdf;
@@ -64,6 +109,10 @@ async function generateImpositionPDF(paperChoice, useBleed, frontImgData, backIm
     const gutterX = 3 * mm;
     const gutterY = 3 * mm;
     const bleed = useBleed ? 1.5 * mm : 0 * mm;
+
+    // 如果启用了出血，先用 Canvas 扩展边缘像素，中间文字不动
+    const processedFront = useBleed ? await extendImageEdges(frontImgData, 1.5, 90, 54) : frontImgData;
+    const processedBack = useBleed ? await extendImageEdges(backImgData, 1.5, 90, 54) : backImgData;
 
     let paperW, paperH, cols, rows, isA3;
 
@@ -199,7 +248,7 @@ async function generateImpositionPDF(paperChoice, useBleed, frontImgData, backIm
             const x = xPositions[col];
             const y = startY + row * (cardH + gutterY);
             doc.addImage(
-                frontImgData,
+                processedFront,
                 'JPEG',
                 x - bleed,
                 y - bleed,
@@ -218,7 +267,7 @@ async function generateImpositionPDF(paperChoice, useBleed, frontImgData, backIm
             const x = xPositions[mirrorCol];
             const y = startY + row * (cardH + gutterY);
             doc.addImage(
-                backImgData,
+                processedBack,
                 'JPEG',
                 x - bleed,
                 y - bleed,
